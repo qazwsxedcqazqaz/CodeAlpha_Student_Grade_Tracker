@@ -1,0 +1,217 @@
+// GradeTracker.java
+import java.util.*;
+import java.io.*;
+
+public class GradeTracker {
+    private ArrayList<Student> students;
+    private Scanner scanner;
+    
+    public GradeTracker() {
+        students = new ArrayList<>();
+        scanner = new Scanner(System.in);
+    }
+    
+    public void run() {
+        while (true) {
+            displayMenu();
+            int choice = getIntInput("Enter your choice: ");
+            
+            switch (choice) {
+                case 1:
+                    addStudent();
+                    break;
+                case 2:
+                    viewAllStudents();
+                    break;
+                case 3:
+                    viewSummaryReport();
+                    break;
+                case 4:
+                    searchStudent();
+                    break;
+                case 5:
+                    saveData();
+                    break;
+                case 6:
+                    loadData();
+                    break;
+                case 7:
+                    System.out.println("Exiting Grade Tracker...");
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+    
+    private void displayMenu() {
+        System.out.println("\n===== STUDENT GRADE TRACKER =====");
+        System.out.println("1. Add Student");
+        System.out.println("2. View All Students");
+        System.out.println("3. View Summary Report");
+        System.out.println("4. Search Student");
+        System.out.println("5. Save Data to File");
+        System.out.println("6. Load Data from File");
+        System.out.println("7. Exit");
+        System.out.println("=================================");
+    }
+    
+    private void addStudent() {
+        System.out.print("Enter student name: ");
+        String name = scanner.nextLine();
+        
+        int id = getIntInput("Enter student ID: ");
+        
+        int numGrades = getIntInput("Enter number of grades: ");
+        double[] grades = new double[numGrades];
+        
+        for (int i = 0; i < numGrades; i++) {
+            grades[i] = getDoubleInput("Enter grade " + (i+1) + ": ");
+        }
+        
+        students.add(new Student(name, id, grades));
+        System.out.println("Student added successfully!");
+    }
+    
+    private void viewAllStudents() {
+        if (students.isEmpty()) {
+            System.out.println("No students registered.");
+            return;
+        }
+        
+        System.out.println("\n===== ALL STUDENTS =====");
+        for (Student s : students) {
+            System.out.println(s);
+            System.out.println("------------------------");
+        }
+    }
+    
+    private void viewSummaryReport() {
+        if (students.isEmpty()) {
+            System.out.println("No students to analyze.");
+            return;
+        }
+        
+        System.out.println("\n===== SUMMARY REPORT =====");
+        
+        // Overall statistics
+        double overallAvg = 0;
+        double overallHighest = Double.MIN_VALUE;
+        double overallLowest = Double.MAX_VALUE;
+        Student highestStudent = null;
+        Student lowestStudent = null;
+        
+        for (Student s : students) {
+            double avg = s.calculateAverage();
+            overallAvg += avg;
+            
+            if (avg > overallHighest) {
+                overallHighest = avg;
+                highestStudent = s;
+            }
+            if (avg < overallLowest) {
+                overallLowest = avg;
+                lowestStudent = s;
+            }
+        }
+        
+        overallAvg /= students.size();
+        
+        System.out.printf("Total Students: %d\n", students.size());
+        System.out.printf("Overall Class Average: %.2f\n", overallAvg);
+        
+        if (highestStudent != null) {
+            System.out.printf("Highest Average: %.2f (Student: %s, ID: %d)\n", 
+                            overallHighest, highestStudent.getName(), highestStudent.getId());
+        }
+        if (lowestStudent != null) {
+            System.out.printf("Lowest Average: %.2f (Student: %s, ID: %d)\n", 
+                            overallLowest, lowestStudent.getName(), lowestStudent.getId());
+        }
+        
+        // Grade distribution
+        System.out.println("\nGrade Distribution:");
+        int[] distribution = new int[5]; // A, B, C, D, F
+        for (Student s : students) {
+            double avg = s.calculateAverage();
+            if (avg >= 90) distribution[0]++;
+            else if (avg >= 80) distribution[1]++;
+            else if (avg >= 70) distribution[2]++;
+            else if (avg >= 60) distribution[3]++;
+            else distribution[4]++;
+        }
+        
+        System.out.printf("A (90-100): %d\n", distribution[0]);
+        System.out.printf("B (80-89): %d\n", distribution[1]);
+        System.out.printf("C (70-79): %d\n", distribution[2]);
+        System.out.printf("D (60-69): %d\n", distribution[3]);
+        System.out.printf("F (0-59): %d\n", distribution[4]);
+    }
+    
+    private void searchStudent() {
+        int id = getIntInput("Enter student ID to search: ");
+        
+        for (Student s : students) {
+            if (s.getId() == id) {
+                System.out.println("Student found:");
+                System.out.println(s);
+                return;
+            }
+        }
+        System.out.println("Student not found.");
+    }
+    
+    private void saveData() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("students.dat"))) {
+            oos.writeObject(students);
+            System.out.println("Data saved successfully!");
+        } catch (IOException e) {
+            System.out.println("Error saving data: " + e.getMessage());
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void loadData() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("students.dat"))) {
+            students = (ArrayList<Student>) ois.readObject();
+            System.out.println("Data loaded successfully!");
+        } catch (FileNotFoundException e) {
+            System.out.println("No saved data found.");
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error loading data: " + e.getMessage());
+        }
+    }
+    
+    private int getIntInput(String prompt) {
+        while (true) {
+            try {
+                System.out.print(prompt);
+                int value = Integer.parseInt(scanner.nextLine());
+                return value;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+            }
+        }
+    }
+    
+    private double getDoubleInput(String prompt) {
+        while (true) {
+            try {
+                System.out.print(prompt);
+                double value = Double.parseDouble(scanner.nextLine());
+                if (value < 0 || value > 100) {
+                    System.out.println("Grade should be between 0 and 100.");
+                    continue;
+                }
+                return value;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid grade.");
+            }
+        }
+    }
+    
+    public static void main(String[] args) {
+        GradeTracker tracker = new GradeTracker();
+        tracker.run();
+    }
+}

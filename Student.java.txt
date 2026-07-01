@@ -1,0 +1,59 @@
+// Student.java
+import java.io.Serializable;
+
+public class Student implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private String name;
+    private int id;
+    private double[] grades;
+    
+    public Student(String name, int id, double[] grades) {
+        this.name = name;
+        this.id = id;
+        this.grades = grades.clone();
+    }
+    
+    public String getName() { return name; }
+    public int getId() { return id; }
+    public double[] getGrades() { return grades.clone(); }
+    
+    public double calculateAverage() {
+        if (grades.length == 0) return 0;
+        double sum = 0;
+        for (double grade : grades) {
+            sum += grade;
+        }
+        return sum / grades.length;
+    }
+    
+    public double getHighestGrade() {
+        if (grades.length == 0) return 0;
+        double max = grades[0];
+        for (double grade : grades) {
+            if (grade > max) max = grade;
+        }
+        return max;
+    }
+    
+    public double getLowestGrade() {
+        if (grades.length == 0) return 0;
+        double min = grades[0];
+        for (double grade : grades) {
+            if (grade < min) min = grade;
+        }
+        return min;
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("ID: %d, Name: %s\n", id, name));
+        sb.append("Grades: ");
+        for (double g : grades) {
+            sb.append(String.format("%.2f ", g));
+        }
+        sb.append(String.format("\nAverage: %.2f, Highest: %.2f, Lowest: %.2f\n", 
+                 calculateAverage(), getHighestGrade(), getLowestGrade()));
+        return sb.toString();
+    }
+}
